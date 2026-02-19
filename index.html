@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI + History Collaboratory</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-alt: #1e293b;
+            --card: #1e293b;
+            --card-hover: #263348;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-dim: #0c4a6e;
+            --border: #334155;
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav .logo {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        nav .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        nav .nav-links a:hover { color: var(--text); }
+
+        /* Hero */
+        .hero {
+            padding: 5rem 2rem 4rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero h1 .highlight { color: var(--accent); }
+
+        .hero .tagline {
+            font-size: 1.2rem;
+            color: var(--muted);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .hero .meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .hero .meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Sections */
+        section {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        section .section-subtitle {
+            color: var(--muted);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        /* About */
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .about-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .about-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .about-card p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Session Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.45rem;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .session {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+        }
+
+        .session::before {
+            content: '';
+            position: absolute;
+            left: -1.65rem;
+            top: 0.6rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg);
+        }
+
+        .session.completed::before {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .session.next::before {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+        }
+
+        .session.future::before {
+            background: var(--bg);
+            border-color: var(--muted);
+        }
+
+        .session-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.25rem;
+        }
+
+        .session-month {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .session-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .badge-completed {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success);
+        }
+
+        .badge-next {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+        }
+
+        .badge-upcoming {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--muted);
+        }
+
+        .session-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .session-date {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .session-desc {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .session-presenter {
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        /* Next Season Preview */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .preview-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+
+        .preview-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .preview-card p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Participants */
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .participant {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .participant .name { font-weight: 600; }
+
+        .participant .role {
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        .institutions {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        /* Resources */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .resource-link {
+            display: block;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .resource-link:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .resource-link h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+
+        .resource-link p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .resource-link .arrow {
+            color: var(--accent);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Divider */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 3rem 1.5rem 2.5rem; }
+            .hero h1 { font-size: 2rem; }
+            section { padding: 2rem 1.5rem; }
+            nav { padding: 0.75rem 1rem; }
+            nav .nav-links { gap: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.6rem; }
+            .hero .meta { flex-direction: column; gap: 0.5rem; }
+            nav .nav-links a { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="#" class="logo">AI + History</a>
+    <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#sessions">Sessions</a>
+        <a href="#people">People</a>
+        <a href="#resources">Resources</a>
+        <a href="https://github.com/ai-and-history-collaboratory" target="_blank">GitHub &rarr;</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <h1>The <span class="highlight">AI + History</span> Collaboratory</h1>
+    <p class="tagline">An online forum for historians exploring how artificial intelligence can transform historical research — from handwritten text recognition to skills, workflows, database interfaces and beyond.</p>
+    <div class="meta">
+        <span>&#128197; Monthly sessions, 4 pm UK time</span>
+        <span>&#127758; US, UK &amp; Europe</span>
+        <span>&#128218; Season 1: Dec 2025 – May 2026</span>
+    </div>
+</div>
+
+<hr class="divider">
+
+<section id="about">
+    <h2>What we do</h2>
+    <p class="section-subtitle">The collaboratory brings together historians and digital humanists to work on AI-enabled research methods — collectively and individually.</p>
+
+    <div class="about-grid">
+        <div class="about-card">
+            <h3>Synchronous sessions</h3>
+            <p>Monthly online meetings with presentations, live demonstrations, and structured discussion. Each session focuses on a specific theme, from HTR pipelines to database protocols.</p>
+        </div>
+        <div class="about-card">
+            <h3>Asynchronous collaboration</h3>
+            <p>Between sessions, members share work via the GitHub repository wiki and discussion board — developing tools, testing workflows, and refining research questions.</p>
+        </div>
+        <div class="about-card">
+            <h3>Three core strands</h3>
+            <p>LLM-enabled handwritten text recognition; development of skills and workflows for historical research; conceptualisation and integration of Model Context Protocol servers into historical research workflows.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<section id="sessions">
+    <h2>2025/26 Season</h2>
+    <p class="section-subtitle">Six monthly sessions running December 2025 through May 2026, with a possible hackathon in June.</p>
+
+    <div class="timeline">
+
+        <div class="session completed">
+            <div class="session-header">
+                <span class="session-month">December 2025</span>
+                <span class="session-badge badge-completed">Completed</span>
+            </div>
+            <div class="session-title">Socratic Research Agents</div>
+            <div class="session-presenter">Presented by Colin Greenstreet</div>
+            <div class="session-date">Tuesday 9 December 2025</div>
+            <p class="session-desc">Conceptualising, designing, and building a Socratic Research Agent for historical research powered by Gemini 3 Pro Preview. Hands-on testing by collaboratory members.</p>
+        </div>
+
+        <div class="session completed">
+            <div class="session-header">
+                <span class="session-month">January 2026</span>
+                <span class="session-badge badge-completed">Completed</span>
+            </div>
+            <div class="session-title">LLM-Enabled HTR &amp; NER</div>
+            <div class="session-presenter">Presented by Colin Greenstreet | expert guests</div>
+            <div class="session-date">Tuesday 20 January 2026 (2-hour session)</div>
+            <p class="session-desc">Handwritten text recognition for Ottoman Turkish and related languages, plus C17th English depositions. Introducing the two-stage methodology — visual transcription versus semantic processing — with skill files for community co-creation and discussion of validation approaches.</p>
+        </div>
+
+        <div class="session next">
+            <div class="session-header">
+                <span class="session-month">February 2026</span>
+                <span class="session-badge badge-next">Next session</span>
+            </div>
+            <div class="session-title">MCP as an Interface with Libraries, Archives &amp; Historical Databases</div>
+            <div class="session-date">Tuesday 24 February 2026, 4 pm UK time</div>
+            <p class="session-desc">Exploring the Model Context Protocol as an interface with libraries, archives, and historical databases. Three case studies (Northeastern University Library, ArchivesSpace, Riksarkivet Sweden), a taxonomy of document agents, and live demonstrations of the ArchivesSpace and Riksarkivet MCP servers using Claude and Gemini front ends.</p>
+        </div>
+
+        <div class="session future">
+            <div class="session-header">
+                <span class="session-month">March 2026</span>
+                <span class="session-badge badge-upcoming">Upcoming</span>
+            </div>
+            <div class="session-title">Cowork for Historians: Skills, Workflows &amp; MCP</div>
+            <p class="session-desc">Details to be confirmed.</p>
+        </div>
+
+        <div class="session future">
+            <div class="session-header">
+                <span class="session-month">April 2026</span>
+                <span class="session-badge badge-upcoming">Upcoming</span>
+            </div>
+            <div class="session-title">Historical Simulations</div>
+            <p class="session-desc">Developing historical simulations for teaching and research. Students build simulations to improve generative AI skills — including charter party writing scenarios exploring C17th maritime negotiations.</p>
+        </div>
+
+        <div class="session future">
+            <div class="session-header">
+                <span class="session-month">May 2026</span>
+                <span class="session-badge badge-upcoming">Upcoming</span>
+            </div>
+            <div class="session-title">Skills, Tools &amp; Knowledge Development</div>
+            <p class="session-desc">Developing a core skills and knowledge inventory for AI-enhanced historical research. From building research agents and designing databases to structuring prompts — and the question of reinventing the History PhD.</p>
+        </div>
+
+        <div class="session future">
+            <div class="session-header">
+                <span class="session-month">June 2026</span>
+                <span class="session-badge badge-upcoming">Possible</span>
+            </div>
+            <div class="session-title">History Hackathon</div>
+            <p class="session-desc">A possible face-to-face or online hackathon for PhD and postdoc historians and computer scientists. Details to be confirmed.</p>
+        </div>
+
+    </div>
+</section>
+
+<hr class="divider">
+
+<section>
+    <h2>Season 2 Preview: 2026/27</h2>
+    <p class="section-subtitle">Beginning September 2026 after summer break.</p>
+    <div class="preview-grid">
+        <div class="preview-card">
+            <h3>Metacognition</h3>
+            <p>Developing personal "voice" when interacting with LLMs. Designing experiments in lab notebooks. Co-developing hypotheses and arguments through research notebooks.</p>
+        </div>
+        <div class="preview-card">
+            <h3>Tool Building</h3>
+            <p>Developing proprietary tools versus using existing ones. Repurposing legacy tools through generative AI. Common protocols (MCP) enabling interconnection and LLM integration.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<section id="people">
+    <h2>People</h2>
+    <p class="section-subtitle">Historians and digital humanists from institutions across the US, UK, and continental Europe.</p>
+
+    <div class="participants-grid">
+        <div class="participant"><span class="name">Gavin Beinart-Smollan</span></div>
+        <div class="participant"><span class="name">Maurice Brenner</span></div>
+        <div class="participant"><span class="name">David Brown</span></div>
+        <div class="participant"><span class="name">Abi Cunningham</span></div>
+        <div class="participant"><span class="name">Marc Eagle</span></div>
+        <div class="participant"><span class="name">Jacob Forward</span></div>
+        <div class="participant">
+            <span class="name">Colin Greenstreet</span>
+            <span class="role">Convenor</span>
+        </div>
+        <div class="participant"><span class="name">Lucas Haasis</span></div>
+        <div class="participant"><span class="name">Sam Kaislaniemi</span></div>
+        <div class="participant"><span class="name">Thiago Krause</span></div>
+        <div class="participant"><span class="name">Oren Okhovat</span></div>
+        <div class="participant"><span class="name">Mark L. Thompson</span></div>
+    </div>
+
+    <p class="institutions">
+        Institutions include Cambridge, East Anglia, Groningen, NYU, Trinity College Dublin, Wayne State, Western Kentucky, Yale, and York.
+    </p>
+</section>
+
+<hr class="divider">
+
+<section id="resources">
+    <h2>Resources</h2>
+    <p class="section-subtitle">Repositories, outputs, and tools from the collaboratory.</p>
+
+    <div class="resources-grid">
+        <a href="https://github.com/ai-and-history-collaboratory/ai-and-history-collaboratory" target="_blank" class="resource-link">
+            <h3>Main Repository</h3>
+            <p>Session materials, readings, wiki, and discussion board — the asynchronous home of the collaboratory.</p>
+            <span class="arrow">View on GitHub &rarr;</span>
+        </a>
+        <a href="https://github.com/ai-and-history-collaboratory/social-media-analysis" target="_blank" class="resource-link">
+            <h3>Social Media Analysis</h3>
+            <p>Interactive dashboards analysing the collaboratory's social media presence and engagement metrics.</p>
+            <span class="arrow">View on GitHub &rarr;</span>
+        </a>
+        <a href="https://github.com/ai-and-history-collaboratory/ai-and-history-collaboratory/wiki" target="_blank" class="resource-link">
+            <h3>Wiki</h3>
+            <p>Extended documentation, how-to guides, and reference materials maintained by collaboratory members.</p>
+            <span class="arrow">Browse the wiki &rarr;</span>
+        </a>
+        <a href="https://github.com/ai-and-history-collaboratory/ai-and-history-collaboratory/discussions" target="_blank" class="resource-link">
+            <h3>Discussions</h3>
+            <p>Asynchronous conversations between sessions — questions, ideas, and shared discoveries.</p>
+            <span class="arrow">Join the discussion &rarr;</span>
+        </a>
+    </div>
+</section>
+
+<footer>
+    <p>AI + History Collaboratory &middot; Convened by <a href="https://github.com/ai-and-history-collaboratory">Colin Greenstreet</a> &middot; Est. December 2024</p>
+</footer>
+
+</body>
+</html>
